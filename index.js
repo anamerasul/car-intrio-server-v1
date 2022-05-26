@@ -24,6 +24,46 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// verifyJWT token
+
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "UnAuthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(
+    token,
+    process.env.NODE_ACCESS_JWT_TOKEN_SECRET,
+    function (err, decoded) {
+      if (err) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      req.decoded = decoded;
+      next();
+    }
+  );
+}
+
+// const verifyJwtToken = (token) => {
+//   let email;
+
+//   jwt.verify(
+//     token,
+//     process.env.NODE_ACCESS_JWT_TOKEN_SECRET,
+//     function (err, decoded) {
+//       if (err) {
+//         email = "invalid";
+//       }
+
+//       if (decoded) {
+//         console.log(decoded);
+//         email = decoded;
+//       }
+//     }
+//   );
+//   return email;
+// };
 const run = async () => {
   try {
     await client.connect();
@@ -60,6 +100,61 @@ const run = async () => {
       .collection("users");
 
     console.log("db connected");
+
+    // verifyAdmin
+
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
+      }
+    };
+
+    // add banner route
+
+    // jwt token in login
+
+    app.post("/login", (req, res) => {
+      const email = req.body;
+      // const user = req.body
+
+      // crypto.randomBytes(64).toString('hex')
+
+      const accessToken = jwt.sign(
+        email,
+        process.env.NODE_ACCESS_JWT_TOKEN_SECRET,
+        {
+          expiresIn: "4d",
+        }
+      );
+      res.send({ accessToken });
+
+      console.log(accessToken);
+    });
+
+    // add banner route
+
+    app.post("/banner", verifyJWT, async (req, res) => {
+      const banners = req.body;
+      const result = await carintrioBannerCollection.insertOne(banners);
+      res.send(result);
+    });
+
+    // get banner route
+
+    app.get("/banners", async (req, res) => {
+      const query = {};
+      const cursor = carintrioBannerCollection.find(query);
+
+      const banners = await cursor.toArray();
+
+      res.send(banners);
+    });
   } finally {
     //
   }
