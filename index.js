@@ -155,6 +155,25 @@ const run = async () => {
 
       res.send(banners);
     });
+
+    // add blogs route
+
+    app.post("/blogs", verifyJWT, async (req, res) => {
+      const blogs = req.body;
+      const result = await carintrioBlogsCollection.insertOne(blogs);
+      res.send(result);
+    });
+
+    // get blogs route
+
+    app.get("/blogs", async (req, res) => {
+      const query = {};
+      const cursor = carintrioBlogsCollection.find(query);
+
+      const blogs = await cursor.toArray();
+
+      res.send(blogs);
+    });
   } finally {
     //
   }
