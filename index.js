@@ -28,6 +28,37 @@ const run = async () => {
   try {
     await client.connect();
 
+    // userDatabase and collection
+    const carintrioBannerCollection = client
+      .db("car-intrio")
+      .collection("banners");
+    const carintrioBlogsCollection = client
+      .db("car-intrio")
+      .collection("blogs");
+    const carintrioOrdersCollection = client
+      .db("car-intrio")
+      .collection("orders");
+
+    const carintrioPaymentsCollection = client
+      .db("car-intrio")
+      .collection("payments");
+    const carintrioPortfolioCollection = client
+      .db("car-intrio")
+      .collection("portfolio");
+    const carintrioProductsCollection = client
+      .db("car-intrio")
+      .collection("products");
+    const carintrioProfileCollection = client
+      .db("car-intrio")
+      .collection("profile");
+
+    const carintrioReviewsCollection = client
+      .db("car-intrio")
+      .collection("reviews");
+    const carintrioUserssCollection = client
+      .db("car-intrio")
+      .collection("users");
+
     console.log("db connected");
   } finally {
     //
