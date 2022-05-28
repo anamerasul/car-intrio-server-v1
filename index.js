@@ -92,6 +92,10 @@ const run = async () => {
       .db("car-intrio")
       .collection("profile");
 
+    const carintriouserProfileCollection = client
+      .db("car-intrio")
+      .collection("userprofile");
+
     const carintrioReviewsCollection = client
       .db("car-intrio")
       .collection("reviews");
@@ -174,9 +178,159 @@ const run = async () => {
 
       res.send(blogs);
     });
+
+    // add portfolio route
+
+    app.post("/portfolio", verifyJWT, async (req, res) => {
+      const portfolio = req.body;
+      const result = await carintrioPortfolioCollection.insertOne(portfolio);
+      res.send(result);
+    });
+
+    // get portfolio route
+    app.get("/portfolio", async (req, res) => {
+      const query = {};
+      const cursor = carintrioPortfolioCollection.find(query);
+
+      const portfolio = await cursor.toArray();
+
+      res.send(portfolio);
+    });
+
+    // add add admin profile route
+
+    app.post("/addProfile", async (req, res) => {
+      const addProfileInfo = req.body;
+
+      const Jwttokeninfo = req.headers.authorization;
+      const [email, accessToken] = Jwttokeninfo.split(" ");
+
+      console.log(Jwttokeninfo);
+      // console.log(orderInfo);
+      console.log(email);
+      const decoded = verifyJwtToken(
+        accessToken,
+        process.env.NODE_ACCESS_JWT_TOKEN_SECRET
+      );
+      console.log(decoded.email);
+
+      console.log(decoded.email);
+
+      if (decoded.email) {
+        const result = await carintrioProfileCollection.insertOne(
+          addProfileInfo
+        );
+        res.send(result);
+      }
+      // if (email === decoded.email) {
+      //   const result = await orderCollection.insertOne(orderInfo);
+      //   res.send({ success: "Product ADD TO USER successfully" });
+      // } else {
+      //   res.status(403).send({ message: "forbidden access" });
+      // }
+    });
+
+    // get admin profile route
+
+    app.get("/addProfile", verifyJWT, async (req, res) => {
+      const useremail = req.email;
+      const id = req.params.id;
+      const query = {};
+
+      console.log(useremail);
+      const cursor = carintrioProfileCollection.find({ email: useremail });
+
+      const profile = await cursor.toArray();
+
+      res.send(profile);
+    });
+
+    // edit admin profile route
+    app.put("/myprofile/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const profile = req.body;
+
+      const result = await carintrioProfileCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: profile }
+      );
+
+      res.send(result);
+    });
+
+    // add product route
+
+    app.post("/products", verifyJWT, async (req, res) => {
+      const products = req.body;
+      const result = await carintrioProductsCollection.insertOne(products);
+      res.send(result);
+    });
+
+    // get all product route
+    app.get("/products", async (req, res) => {
+      const query = {};
+      const cursor = carintrioProductsCollection.find(query);
+
+      const products = await cursor.toArray();
+
+      res.send(products);
+    });
+
+    // get spefic products route
+    // app.get("/products/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: ObjectId(id) };
+    //   const product = carintrioProductsCollection.findOne(query);
+
+    //   // const product = await cursor.();
+
+    //   res.send(product);
+    // });
+
+    app.get("/products/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const item = await carintrioProductsCollection.findOne(query);
+      res.send(item);
+    });
+
+    // update spefic product
+    app.put("/products/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+
+      const result = await carintrioProductsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: data }
+      );
+
+      res.send(result);
+    });
   } finally {
     //
   }
+};
+
+// alternative jwttoken
+
+const verifyJwtToken = (token) => {
+  let email;
+
+  jwt.verify(
+    token,
+    process.env.NODE_ACCESS_JWT_TOKEN_SECRET,
+    function (err, decoded) {
+      if (err) {
+        email = "invalid";
+      }
+
+      if (decoded) {
+        console.log(decoded);
+        email = decoded;
+      }
+    }
+  );
+  return email;
 };
 
 run().catch(console.dir);
